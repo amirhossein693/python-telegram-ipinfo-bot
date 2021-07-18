@@ -12,17 +12,16 @@ Basic Echobot example, repeats messages.
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-
 import logging
-
-# IP INFO 
+import ipaddress
 import ipinfo
-access_token = 'd4dac792e03f83'
-ip_handler = ipinfo.getHandler(access_token)
-
-
+from config import ipinfo_token, telegram_bot_token
 from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+
+
+ip_handler = ipinfo.getHandler(ipinfo_token)
+
 
 # Enable logging
 logging.basicConfig(
@@ -50,14 +49,18 @@ def help_command(update: Update, context: CallbackContext) -> None:
 
 def echo(update: Update, context: CallbackContext) -> None:
     """Echo the user message."""
-    details = ip_handler.getDetails(update.message.text)
-    update.message.reply_text("region: " + details.region + "\n" + "city: " + details.city + "\n" + "timezone: " + details.timezone)
+    try:
+        ipaddress.ip_address(update.message.text)
+        details = ip_handler.getDetails(update.message.text)
+        update.message.reply_text("region: " + details.region + "\n" + "city: " + details.city + "\n" + "timezone: " + details.timezone)
+    except ValueError:
+        update.message.reply_text("Please enter a valid IP address")
 
 
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
-    updater = Updater("1761453439:AAEfjhErMxVKLWrQvNfH3bzfrL04WsJSvYM")
+    updater = Updater(telegram_bot_token)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
